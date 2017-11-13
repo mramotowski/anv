@@ -20,7 +20,7 @@ pipeline {
             sh 'echo exit > src/test/vmmalloc_fork/TEST3'
             sh 'cp ~/testconfig.sh ${WORKSPACE}/src/test/'            
             sh 'make EXTRA_CFLAGS=-DUSE_VALGRIND -j4 test'
-            sh 'make pcheck -k RPMEM_DISABLE_LIBIBVERBS=y TEST_TYPE=short TM=1'
+            sh 'make pcheck -k RPMEM_DISABLE_LIBIBVERBS=y TEST_TYPE=all TM=1'
           }
         }
         stage('Fedora') {
@@ -32,7 +32,7 @@ pipeline {
             sh 'echo exit > src/test/vmmalloc_fork/TEST3'
             sh 'cp ~/testconfig.sh ${WORKSPACE}/src/test/'
             sh 'make EXTRA_CFLAGS=-DUSE_VALGRIND -j4 test'
-            sh 'make pcheck -k RPMEM_DISABLE_LIBIBVERBS=y TEST_TYPE=short TM=1'
+            sh 'make pcheck -k RPMEM_DISABLE_LIBIBVERBS=y TEST_TYPE=all TM=1'
           }
         }
         stage('RedHat') {
@@ -44,7 +44,7 @@ pipeline {
             sh 'echo exit > src/test/vmmalloc_fork/TEST3'
             sh 'cp ~/testconfig.sh ${WORKSPACE}/src/test/'
             sh 'make EXTRA_CFLAGS=-DUSE_VALGRIND -j4 test'
-            sh 'make pcheck -k RPMEM_DISABLE_LIBIBVERBS=y TEST_TYPE=short TM=1'
+            sh 'make pcheck -k RPMEM_DISABLE_LIBIBVERBS=y TEST_TYPE=all TM=1'
           }
         }
         stage('Suse') {
@@ -56,7 +56,7 @@ pipeline {
             sh 'echo exit > src/test/vmmalloc_fork/TEST3'
             sh 'cp ~/testconfig.sh ${WORKSPACE}/src/test/'
             sh 'make EXTRA_CFLAGS=-DUSE_VALGRIND -j4 test'
-            sh 'make pcheck -k RPMEM_DISABLE_LIBIBVERBS=y TEST_TYPE=short TM=1'
+            sh 'make pcheck -k RPMEM_DISABLE_LIBIBVERBS=y TEST_TYPE=all TM=1'
           }
         }   
       }
