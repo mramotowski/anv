@@ -10,7 +10,7 @@ pipeline {
       }
     }
     stage('Memcheck') {
-      agent {label "${nvml_ubuntu_memcheck_tests}"}
+      agent {label "${nvml_memcheck_tests}"}
       steps {
         deleteDir()
         unstash 'nvml'

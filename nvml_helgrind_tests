@@ -10,7 +10,7 @@ pipeline {
       }
     }
     stage('Helgrind') {
-      agent {label "${nvml_ubuntu_helgrind_tests}"}
+      agent {label "${nvml_helgrind_tests}"}
       steps {
         deleteDir()
         unstash 'nvml'

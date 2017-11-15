@@ -10,7 +10,7 @@ pipeline {
       }
     }
     stage('Drd') {
-      agent {label "${nvml_ubuntu_drd_tests}"}
+      agent {label "${nvml_drd_tests}"}
       steps {
         deleteDir()
         unstash 'nvml'
