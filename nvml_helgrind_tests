@@ -31,7 +31,7 @@ pipeline {
       )
     }
     aborted {
-      sh 'echo Build was aborted manually'
+      echo 'Build was aborted manually'
     }
   }
   parameters {
