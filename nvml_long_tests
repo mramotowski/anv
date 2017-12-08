@@ -65,13 +65,16 @@ pipeline {
     }
   }
   post {
-        failure {
-            mail (
-                to: "${mail_list}",
-                subject: "Long tests",
-                body: "Tests failed on at leat one configuration pls check: ${env.JENKINS_URL}blue/organizations/jenkins/${env.JOB_NAME}/detail/${env.JOB_NAME}/${env.BUILD_NUMBER}"
-            )
-        }
+    aborted {
+      sh 'echo Build was aborted manually'
+    }
+    failure {
+      mail (
+        to: "${mail_list}",
+        subject: "Long tests",
+        body: "Tests failed on at leat one configuration pls check: ${env.JENKINS_URL}blue/organizations/jenkins/${env.JOB_NAME}/detail/${env.JOB_NAME}/${env.BUILD_NUMBER}"
+      )
+    }
   }
   parameters {
     string(name: 'BRANCH', defaultValue: 'master', description: 'Branch to run tests on')

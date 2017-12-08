@@ -23,6 +23,9 @@ pipeline {
     }
   }
   post {
+    aborted {
+      sh 'echo Build was aborted manually'
+    }
     failure {
       mail (
         to: "${mail_list}",
