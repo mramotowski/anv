@@ -23,15 +23,15 @@ pipeline {
     }
   }
   post {
-    aborted {
-      sh 'echo Build was aborted manually'
-    }
     failure {
       mail (
         to: "${mail_list}",
         subject: "nvml tests - helgrind",
         body: "Tests failed pls check: ${env.JENKINS_URL}blue/organizations/jenkins/${env.JOB_NAME}/detail/${env.JOB_NAME}/${env.BUILD_NUMBER}"
       )
+    }
+    aborted {
+      sh 'echo Build was aborted manually'
     }
   }
   parameters {
