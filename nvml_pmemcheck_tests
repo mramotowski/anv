@@ -1,40 +1,37 @@
 pipeline {
-  agent none
-  stages {
-    stage('Prepare') {
-      agent {label 'master'}
-      steps {
-        git(url: 'https://github.com/pmem/nvml', branch: "${params.BRANCH}")
-        stash(name: 'nvml', includes: '*/**')
-        deleteDir()
-      }
+    agent none
+    stages {
+        stage('Prepare') {
+        agent {label 'master'}
+        steps {
+            git(url: 'https://github.com/pmem/nvml', branch: "${params.BRANCH}")
+            stash(name: 'nvml', includes: '*/**')
+            deleteDir()
+            }   
+        }   
+        stage('Drd') {
+            agent {label "${nvml_pmemcheck_tests}"}
+            steps {
+                deleteDir()
+                unstash 'nvml'
+                sh 'echo exit > src/test/vmmalloc_fork/TEST1'
+                sh 'echo exit > src/test/vmmalloc_fork/TEST3'
+                sh 'cp ~/testconfig.sh ${WORKSPACE}/src/test/'    
+                sh 'make EXTRA_CFLAGS=-DUSE_VALGRIND -j4 test'
+                sh 'make pcheck -k TEST_TYPE=all TEST_BUILD="debug nondebug" TM=1 PMEMCHECK=force-enable'
+            }
+        }
     }
-    stage('Pmemcheck') {
-      agent {label "${nvml_pmemcheck_tests}"}
-      steps {
-        deleteDir()
-        unstash 'nvml'
-        sh 'echo exit > src/test/vmmalloc_fork/TEST1'
-        sh 'echo exit > src/test/vmmalloc_fork/TEST3'
-        sh 'cp ~/testconfig.sh ${WORKSPACE}/src/test/'            
-        sh 'make EXTRA_CFLAGS=-DUSE_VALGRIND -j4 test'
-        sh 'make pcheck -k TEST_TYPE=all TEST_BUILD="debug nondebug" TM=1 PMEMCHECK=force-enable'
-      }
+    post {
+        failure {
+            mail (
+                to: "${mail_list}",
+                subject: "nvml tests - pmemcheck",
+                body: "Tests failed pls check: ${env.JENKINS_URL}blue/organizations/jenkins/${env.JOB_NAME}/detail/${env.JOB_NAME}/${env.BUILD_NUMBER}"
+            )   
+        }   
     }
-  }
-  post {
-    aborted {
-      sh 'echo Build was aborted manually'
+    parameters {
+        string(name: 'BRANCH', defaultValue: 'master', description: 'Branch to run tests on')
     }
-    failure {
-      mail (
-        to: "${mail_list}",
-        subject: "nvml tests - pmemcheck",
-        body: "Tests failed pls check: ${env.JENKINS_URL}blue/organizations/jenkins/${env.JOB_NAME}/detail/${env.JOB_NAME}/${env.BUILD_NUMBER}"
-      )
-    }
-  }
-  parameters {
-    string(name: 'BRANCH', defaultValue: 'master', description: 'Branch to run tests on')
-  }
 }

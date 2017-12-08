@@ -1,56 +1,54 @@
 pipeline {
-  agent none
-  stages {
-    stage('Prepare') {
-      agent {label 'master'}
-      steps {
-        git(url: 'https://github.com/pmem/nvml', branch: "${params.BRANCH}")
-        stash(name: 'nvml', includes: '*/**')
-        deleteDir()
-      }
-    }
-    stage('B&T') {
-      parallel {
-        stage('Ubuntu') {
-          agent {label "${nvml_ubuntu_long_tests}"}
-          steps {
+    agent none
+    stages {
+        stage('Prepare') {
+            agent {label 'master'}
+            steps {
+            git(url: 'https://github.com/pmem/nvml', branch: "${params.BRANCH}")
+            stash(name: 'nvml', includes: '*/**')
             deleteDir()
-            unstash 'nvml'
-            sh 'echo exit > src/test/vmmalloc_fork/TEST1'
-            sh 'echo exit > src/test/vmmalloc_fork/TEST3'
-            sh 'cp ~/testconfig.sh ${WORKSPACE}/src/test/'            
-            sh 'make -j4 CC=clang CXX=clang++ USE_LLVM_LIBCPP=1 EXTRA_CFLAGS=-DUSE_VALGRIND LIBCPP_INCDIR=/usr/local/libcxx/include/c++/v1 LIBCPP_LIBDIR=/usr/local/libcxx/lib test'
-            sh 'cd src/test && ./RUNTESTS obj_cpp* -t all'
-          }
-        }
-        stage('Fedora') {
-          agent {label 'nvml_fedora24_tests'}
-          steps {
-            deleteDir()
-            unstash 'nvml'
-            sh 'echo exit > src/test/vmmalloc_fork/TEST1'
-            sh 'echo exit > src/test/vmmalloc_fork/TEST3'
-            sh 'cp ~/testconfig.sh ${WORKSPACE}/src/test/'
-            sh 'make -j4 CC=clang CXX=clang++ USE_LLVM_LIBCPP=1 EXTRA_CFLAGS=-DUSE_VALGRIND LIBCPP_INCDIR=/usr/local/libcxx/include/c++/v1 LIBCPP_LIBDIR=/usr/local/libcxx/lib test'
-            sh 'cd src/test && ./RUNTESTS obj_cpp* -t all'
-          }
-        }
-      }
+            }   
+        }   
+        stage('B&T') {
+            parallel {
+                stage('Ubuntu') {
+                    agent {label "${nvml_ubuntu_long_tests}"}
+                    steps {
+                        deleteDir()
+                        unstash 'nvml'
+                        sh 'echo exit > src/test/vmmalloc_fork/TEST1'
+                        sh 'echo exit > src/test/vmmalloc_fork/TEST3'
+                        sh 'cp ~/testconfig.sh ${WORKSPACE}/src/test/'    
+                        sh 'make -j4 CC=clang CXX=clang++ USE_LLVM_LIBCPP=1 EXTRA_CFLAGS=-DUSE_VALGRIND LIBCPP_INCDIR=/usr/local/libcxx/include/c++/v1 LIBCPP_LIBDIR=/usr/local/libcxx/lib test'
+                        sh 'cd src/test && ./RUNTESTS obj_cpp* -t all'
+                    }
+                }
+                stage('Fedora') {
+                    agent {label 'nvml_fedora24_tests'}
+                    steps {
+                        deleteDir()
+                        unstash 'nvml'
+                        sh 'echo exit > src/test/vmmalloc_fork/TEST1'
+                        sh 'echo exit > src/test/vmmalloc_fork/TEST3'
+                        sh 'cp ~/testconfig.sh ${WORKSPACE}/src/test/'
+                        sh 'make -j4 CC=clang CXX=clang++ USE_LLVM_LIBCPP=1 EXTRA_CFLAGS=-DUSE_VALGRIND LIBCPP_INCDIR=/usr/local/libcxx/include/c++/v1 LIBCPP_LIBDIR=/usr/local/libcxx/lib test'
+                        sh 'cd src/test && ./RUNTESTS obj_cpp* -t all'
+                    }
+                }
+            }   
+        }   
     }
-  }
-  post {
-    aborted {
-      sh 'echo Build was aborted manually'
+    post {
+        failure {
+           mail (
+             to: "${mail_list}",
+             subject: "Long tests",
+             body: "Tests failed on at leat one configuration pls check: ${env.JENKINS_URL}blue/organizations/jenkins/${env.JOB_NAME}/detail/${env.JOB_NAME}/${env.BUILD_NUMBER}"
+           )
+        }   
     }
-    failure {
-       mail (
-         to: "${mail_list}",
-         subject: "Long tests",
-         body: "Tests failed on at leat one configuration pls check: ${env.JENKINS_URL}blue/organizations/jenkins/${env.JOB_NAME}/detail/${env.JOB_NAME}/${env.BUILD_NUMBER}"
-       )
+    parameters {
+        string(name: 'BRANCH', defaultValue: 'master', description: 'Branch to run tests on')
     }
-  }
-  parameters {
-    string(name: 'BRANCH', defaultValue: 'master', description: 'Branch to run tests on')
-  }
 }
+
