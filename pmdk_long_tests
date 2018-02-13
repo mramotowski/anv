@@ -4,20 +4,20 @@ pipeline {
         stage('Prepare') {
             agent {label 'master'}
             steps {
-                git(url: 'https://github.com/pmem/nvml', branch: "${params.BRANCH}")
-                stash(name: 'nvml', includes: '*/**')
+                git(url: 'https://github.com/pmem/pmdk', branch: "${params.BRANCH}")
+                sh 'echo exit > src/test/vmmalloc_fork/TEST1'
+                sh 'echo exit > src/test/vmmalloc_fork/TEST3'
+                stash(name: 'pmdk', includes: '*/**')
                 deleteDir()
             }
         }
         stage('B&T') {
             parallel {
                 stage('Ubuntu') {
-                    agent {label "${nvml_ubuntu_long_tests}"}
+                    agent {label "${pmdk_ubuntu_long_tests}"}
                     steps {
                         deleteDir()
-                        unstash 'nvml'
-                        sh 'echo exit > src/test/vmmalloc_fork/TEST1'
-                        sh 'echo exit > src/test/vmmalloc_fork/TEST3'
+                        unstash 'pmdk'
                         sh 'echo exit > src/test/pmempool_transform/TEST20'
                         sh 'cp ~/testconfig.sh ${WORKSPACE}/src/test/' 
                         sh 'make EXTRA_CFLAGS=-DUSE_VALGRIND -j4 test'
@@ -25,12 +25,10 @@ pipeline {
                     }
                 }
                 stage('Fedora') {
-                    agent {label 'nvml_fedora24_tests'}
+                    agent {label "${pmdk_fedora_long_tests}"}
                     steps {
                         deleteDir()
-                        unstash 'nvml'
-                        sh 'echo exit > src/test/vmmalloc_fork/TEST1'
-                        sh 'echo exit > src/test/vmmalloc_fork/TEST3'
+                        unstash 'pmdk'
                         sh 'echo exit > src/test/pmempool_transform/TEST20'
                         sh 'cp ~/testconfig.sh ${WORKSPACE}/src/test/'
                         sh 'make EXTRA_CFLAGS=-DUSE_VALGRIND -j4 test'
@@ -38,24 +36,20 @@ pipeline {
                     }
                 }
                 stage('RedHat') {
-                    agent {label 'nvml_redhat7_tests'}
+                    agent {label "${pmdk_redhat_long_tests}"}
                     steps {
                         deleteDir()
-                        unstash 'nvml'
-                        sh 'echo exit > src/test/vmmalloc_fork/TEST1'
-                        sh 'echo exit > src/test/vmmalloc_fork/TEST3'
+                        unstash 'pmdk'
                         sh 'cp ~/testconfig.sh ${WORKSPACE}/src/test/'
                         sh 'make EXTRA_CFLAGS=-DUSE_VALGRIND -j4 test'
                         sh 'make pcheck -k RPMEM_DISABLE_LIBIBVERBS=y TEST_TYPE=all TM=1'
                     }
                 }
                 stage('Suse') {
-                    agent {label 'nvml_suse_tests'}
+                    agent {label "${pmdk_suse_long_tests}"}
                     steps {
                         deleteDir()
-                        unstash 'nvml'
-                        sh 'echo exit > src/test/vmmalloc_fork/TEST1'
-                        sh 'echo exit > src/test/vmmalloc_fork/TEST3'
+                        unstash 'pmdk'
                         sh 'cp ~/testconfig.sh ${WORKSPACE}/src/test/'
                         sh 'make EXTRA_CFLAGS=-DUSE_VALGRIND -j4 test'
                         sh 'make pcheck -k RPMEM_DISABLE_LIBIBVERBS=y TEST_TYPE=all TM=1'

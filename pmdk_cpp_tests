@@ -4,18 +4,18 @@ pipeline {
         stage('Prepare') {
             agent {label 'master'}
             steps {
-            git(url: 'https://github.com/pmem/nvml', branch: "${params.BRANCH}")
-            stash(name: 'nvml', includes: '*/**')
-            deleteDir()
+                git(url: 'https://github.com/pmem/pmdk', branch: "${params.BRANCH}")
+                stash(name: 'pmdk', includes: '*/**')
+                deleteDir()
             }   
         }   
         stage('B&T') {
             parallel {
                 stage('Ubuntu') {
-                    agent {label "${nvml_ubuntu_long_tests}"}
+                    agent {label "${pmdk_ubuntu_long_tests}"}
                     steps {
                         deleteDir()
-                        unstash 'nvml'
+                        unstash 'pmdk'
                         sh 'echo exit > src/test/vmmalloc_fork/TEST1'
                         sh 'echo exit > src/test/vmmalloc_fork/TEST3'
                         sh 'cp ~/testconfig.sh ${WORKSPACE}/src/test/'    
@@ -24,10 +24,10 @@ pipeline {
                     }
                 }
                 stage('Fedora') {
-                    agent {label 'nvml_fedora24_tests'}
+                    agent {label "${pmdk_fedora_long_tests}"}
                     steps {
                         deleteDir()
-                        unstash 'nvml'
+                        unstash 'pmdk'
                         sh 'echo exit > src/test/vmmalloc_fork/TEST1'
                         sh 'echo exit > src/test/vmmalloc_fork/TEST3'
                         sh 'cp ~/testconfig.sh ${WORKSPACE}/src/test/'
@@ -51,4 +51,3 @@ pipeline {
         string(name: 'BRANCH', defaultValue: 'master', description: 'Branch to run tests on')
     }
 }
-

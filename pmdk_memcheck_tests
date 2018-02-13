@@ -2,23 +2,23 @@ pipeline {
     agent none
     stages {
         stage('Prepare') {
-        agent {label 'master'}
-        steps {
-            git(url: 'https://github.com/pmem/nvml', branch: "${params.BRANCH}")
-            stash(name: 'nvml', includes: '*/**')
-            deleteDir()
+            agent {label 'master'}
+            steps {
+                git(url: 'https://github.com/pmem/pmdk', branch: "${params.BRANCH}")
+                stash(name: 'pmdk', includes: '*/**')
+                deleteDir()
             }   
         }   
-        stage('Drd') {
-            agent {label "${nvml_drd_tests}"}
+        stage('Memcheck') {
+            agent {label "${pmdk_memcheck_tests}"}
             steps {
                 deleteDir()
-                unstash 'nvml'
+                unstash 'pmdk'
                 sh 'echo exit > src/test/vmmalloc_fork/TEST1'
                 sh 'echo exit > src/test/vmmalloc_fork/TEST3'
                 sh 'cp ~/testconfig.sh ${WORKSPACE}/src/test/'    
                 sh 'make EXTRA_CFLAGS=-DUSE_VALGRIND -j4 test'
-                sh 'make pcheck -k TEST_TYPE=all TEST_BUILD="debug nondebug" TM=1 DRD=force-enable'
+                sh 'make pcheck -k TEST_TYPE=all TEST_BUILD="debug nondebug" TM=1 MEMCHECK=force-enable'
             }
         }
     }
@@ -26,7 +26,7 @@ pipeline {
         failure {
             mail (
                 to: "${mail_list}",
-                subject: "nvml tests - drd",
+                subject: "pmdk tests - memcheck",
                 body: "Tests failed pls check: ${env.JENKINS_URL}blue/organizations/jenkins/${env.JOB_NAME}/detail/${env.JOB_NAME}/${env.BUILD_NUMBER}"
             )   
         }   
